@@ -23,3 +23,13 @@ gocli packages
 | exec    | Sub processes management package |
 | form    | Cli form helper                  |
 | utils   | Interaction package              |
+
+Credits
+-------
+
+Thanks to [Jawher Moussa](https://github.com/jawher) for his great work [mow.cli](https://github.com/jawher/mow.cli)
+
+LICENSE
+-------
+
+MIT Licensed

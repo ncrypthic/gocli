@@ -21,7 +21,7 @@ func TestBoolField(t *testing.T) {
 	if boolField.Validator() == nil {
 		t.Errorf("BoolField validator should not nil")
 	}
-	if isValid := boolField.Validator().Validate([]byte("true")); !isValid {
+	if isValid, _ := boolField.Validator().Validate([]byte("true")); !isValid {
 		t.Errorf("Value `true` should be valid with BoolField type validator")
 	}
 	if boolField.Scanner() == nil {
@@ -51,7 +51,7 @@ func TestFloatField(t *testing.T) {
 	if floatField.Validator() == nil {
 		t.Errorf("FloatField validator should not nil")
 	}
-	if isValid := floatField.Validator().Validate([]byte("1.2")); !isValid {
+	if isValid, _ := floatField.Validator().Validate([]byte("1.2")); !isValid {
 		t.Errorf("Value `1.2` should be valid with FloatField type validator")
 	}
 	if floatField.Scanner() == nil {
@@ -81,7 +81,7 @@ func TestIntField(t *testing.T) {
 	if intField.Validator() == nil {
 		t.Errorf("IntField validator should not nil")
 	}
-	if isValid := intField.Validator().Validate([]byte("1")); !isValid {
+	if isValid, _ := intField.Validator().Validate([]byte("1")); !isValid {
 		t.Errorf("Value `1` should be valid with IntField type validator")
 	}
 	if intField.Scanner() == nil {
@@ -111,7 +111,7 @@ func TestStringField(t *testing.T) {
 	if stringField.Validator() == nil {
 		t.Errorf("StringField validator should not nil")
 	}
-	if isValid := stringField.Validator().Validate([]byte("n/a")); !isValid {
+	if isValid, _ := stringField.Validator().Validate([]byte("n/a")); !isValid {
 		t.Errorf("Value `n/a` should be valid with StringField type validator")
 	}
 	if stringField.Scanner() == nil {
@@ -143,7 +143,7 @@ func TestTimeField(t *testing.T) {
 	if stringField.Validator() == nil {
 		t.Errorf("TimeField validator should not nil")
 	}
-	if isValid := stringField.Validator().Validate([]byte(validDatetimeStr)); !isValid {
+	if isValid, _ := stringField.Validator().Validate([]byte(validDatetimeStr)); !isValid {
 		t.Errorf("Value `n/a` should be valid with TimeField type validator")
 	}
 	if stringField.Scanner() == nil {

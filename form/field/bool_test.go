@@ -6,13 +6,13 @@ import (
 
 func TestBoolValidator(t *testing.T) {
 	validator := &boolValidator{}
-	if isTrue := validator.Validate([]byte("n/a")); isTrue {
+	if isTrue, _ := validator.Validate([]byte("n/a")); isTrue {
 		t.Error("`n/a` should be an invalid bool value")
 	}
-	if isTrue := validator.Validate([]byte("false")); isTrue {
-		t.Error("`false` should be an invalid bool value")
+	if isTrue, _ := validator.Validate([]byte("false")); !isTrue {
+		t.Error("`false` should be a valid bool value")
 	}
-	if isTrue := validator.Validate([]byte("true")); !isTrue {
+	if isTrue, _ := validator.Validate([]byte("true")); !isTrue {
 		t.Error("`true` should be a valid bool value")
 	}
 }

@@ -6,13 +6,13 @@ import (
 
 func TestFloatValidator(t *testing.T) {
 	validator := &floatValidator{}
-	if isTrue := validator.Validate([]byte("n/a")); isTrue {
+	if isTrue, _ := validator.Validate([]byte("n/a")); isTrue {
 		t.Error("`n/a` should be an invalid float64 value")
 	}
-	if isTrue := validator.Validate([]byte("1")); !isTrue {
+	if isTrue, _ := validator.Validate([]byte("1")); !isTrue {
 		t.Error("`1` should be a valid float64 value")
 	}
-	if isTrue := validator.Validate([]byte("1.0")); !isTrue {
+	if isTrue, _ := validator.Validate([]byte("1.0")); !isTrue {
 		t.Error("`1.0` should be a valid float64 value")
 	}
 }

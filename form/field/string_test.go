@@ -6,10 +6,10 @@ import (
 
 func TestStringValidator(t *testing.T) {
 	validator := &stringValidator{}
-	if isTrue := validator.Validate([]byte("1")); !isTrue {
+	if isTrue, _ := validator.Validate([]byte("1")); !isTrue {
 		t.Error("`1` should be a valid string value")
 	}
-	if isTrue := validator.Validate([]byte("true")); !isTrue {
+	if isTrue, _ := validator.Validate([]byte("true")); !isTrue {
 		t.Error("`true` should be a valid string value")
 	}
 }

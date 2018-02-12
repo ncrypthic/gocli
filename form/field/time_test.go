@@ -10,10 +10,10 @@ var validDatetimeStr string = "2006-01-02T15:04:05.9999+07:00"
 
 func TestTimeValidator(t *testing.T) {
 	validator := &timeValidator{layout}
-	if isTrue := validator.Validate([]byte(validDatetimeStr)); !isTrue {
+	if isTrue, _ := validator.Validate([]byte(validDatetimeStr)); !isTrue {
 		t.Errorf("`%s` should be a valid time value", validDatetimeStr)
 	}
-	if isTrue := validator.Validate([]byte("true")); isTrue {
+	if isTrue, _ := validator.Validate([]byte("true")); isTrue {
 		t.Error("`true` should not be a valid time value")
 	}
 }

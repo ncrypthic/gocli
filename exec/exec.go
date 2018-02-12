@@ -107,7 +107,7 @@ func WithWorkingDirectory(ec ExecutionContext, workdir string) ExecutionContext 
 	}
 }
 
-//WithWorkingDirectory sets working directory for process that will be executed
+//WithIOPipe will execute context with io piped
 func WithIOPipe(ec ExecutionContext) ExecutionContext {
 	return ExecutionContext{
 		vars:    ec.vars,

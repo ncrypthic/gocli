@@ -21,11 +21,40 @@ func echoHandler(cmd *cli.Cmd) {
 func pwdHandler(cmd *cli.Cmd) {
 	cmd.Action = func() {
 		ctx := exec.NewExecutionContext()
-		ctx = exec.WithTimeout(ctx, 3*time.Second)
-		if _, err := exec.Execute(ctx, "pwd", "-L"); err != nil {
+		_, err := exec.Execute(ctx, "pwd", "-L")
+		if err != nil {
 			fmt.Println(err.Error())
-		} else {
+			return
+		}
+		err = <-ctx.Done()
+		switch {
+		case err == exec.ErrContextTimeout:
+			fmt.Println("timeout!")
+		case err != nil:
+			fmt.Println(err.Error())
+		default:
 			fmt.Println("pwd ok")
+		}
+	}
+}
+
+func pwdPipeHandler(cmd *cli.Cmd) {
+	cmd.Action = func() {
+		ctx := exec.NewExecutionContext()
+		ctx = exec.WithIOPipe(ctx)
+		_, err := exec.Execute(ctx, "pwd", "-L")
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		err = <-ctx.Done()
+		switch {
+		case err == exec.ErrContextTimeout:
+			fmt.Println("timeout!")
+		case err != nil:
+			fmt.Println(err.Error())
+		default:
+			fmt.Println("pwd ok!")
 		}
 	}
 }
@@ -33,10 +62,20 @@ func pwdHandler(cmd *cli.Cmd) {
 func pwdIOHandler(cmd *cli.Cmd) {
 	cmd.Action = func() {
 		ctx := exec.NewExecutionContext()
-		ctx = exec.WithTimeout(ctx, 3*time.Second)
-		ctx = exec.WithIOPipe(ctx)
-		if _, err := exec.Execute(ctx, "pwd", "-L"); err != nil {
+		ctx = exec.WithTimeout(ctx, 1*time.Second)
+		_, err := exec.Execute(ctx, "ping", "8.8.8.8", "-t", "100")
+		if err != nil {
 			fmt.Println(err.Error())
+			return
+		}
+		err = <-ctx.Done()
+		switch {
+		case err == exec.ErrContextTimeout:
+			fmt.Println("timeout!")
+		case err != nil:
+			fmt.Println(err.Error())
+		default:
+			fmt.Println("pwd ok!")
 		}
 	}
 }
@@ -56,8 +95,15 @@ func ExampleRegisterOsCommand() {
 }
 
 func ExampleRegisterOsCommandWithIOPipe() {
-	Register("pwd", "print working directory", pwdHandler)
-	Start([]string{"testapp", "pwd"}, "testapp", "testing cli app")
+	Register("pwdPipe", "print working directory", pwdHandler)
+	Start([]string{"testapp", "pwdPipe"}, "testapp", "testing cli app")
 	//Output:
 	//pwd ok
+}
+
+func ExampleRegisterOsCommandWithTimeout() {
+	Register("pwdTimeout", "print working directory with timeout", pwdIOHandler)
+	Start([]string{"testapp", "pwdTimeout"}, "testapp", "testing cli app")
+	//Output:
+	//timeout!
 }

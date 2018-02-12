@@ -9,11 +9,12 @@ import (
 	"time"
 )
 
-//ErrContextTimeout indicated context cancelled due to timed out
-type ErrContextTimeout error
-
-//ErrContextCancelled indicated context cancelled
-type ErrContextCancelled error
+var (
+	//ErrContextTimeout indicated context cancelled due to timed out
+	ErrContextTimeout = fmt.Errorf("Context timed out")
+	//ErrContextCancelled indicated context cancelled
+	ErrContextCancelled = fmt.Errorf("Context cancelled")
+)
 
 //EnvironmentVariables is a key-value string pairs for environment variables
 type EnvironmentVariables map[string]string
@@ -66,7 +67,7 @@ func (ctx ExecutionContext) Done() <-chan error {
 //WithCancel returns copy ExecutionContext with a cancel function to cancel the execution context
 func WithCancel(ctx ExecutionContext) (ExecutionContext, func()) {
 	cancelFunc := func() {
-		ctx.chDone <- ErrContextCancelled(fmt.Errorf("Context cancelled"))
+		ctx.chDone <- ErrContextCancelled
 	}
 	return ExecutionContext{
 		vars:    ctx.vars,
@@ -120,35 +121,12 @@ func WithIOPipe(ec ExecutionContext) ExecutionContext {
 
 //Execute will run command within specified context
 func Execute(ctx ExecutionContext, cmd string, args ...string) (proc *exec.Cmd, err error) {
-	defer close(ctx.chDone)
 	proc = exec.Command(cmd, args...)
 	if len(ctx.vars) > 0 {
 		proc.Env = ctx.vars.ToSliceString()
 	}
 	if ctx.wd != "" {
 		proc.Dir = ctx.wd
-	}
-	if ctx.timeout > 0 {
-		go func() {
-			for {
-				select {
-				case <-time.After(ctx.timeout):
-					ctx.chDone <- ErrContextTimeout(fmt.Errorf("Context timed out"))
-					if !proc.ProcessState.Exited() {
-						proc.Process.Kill()
-					}
-					return
-				case err := <-ctx.chDone:
-					switch err.(type) {
-					case ErrContextCancelled:
-						if !proc.ProcessState.Exited() {
-							proc.Process.Kill()
-						}
-					}
-					return
-				}
-			}
-		}()
 	}
 	if ctx.pipedIO {
 		proc.Stdout = os.Stdout
@@ -159,7 +137,20 @@ func Execute(ctx ExecutionContext, cmd string, args ...string) (proc *exec.Cmd, 
 	// fmt.Printf("%s\n", strings.Join(proc.Env, "\n"))
 	if err = proc.Start(); err != nil {
 		fmt.Printf("The command `%s %s` failed to run, please make sure you are running command with correct arguments\n", cmd, strings.Join(args, " "))
+		return
 	}
-	err = proc.Wait()
+	if ctx.timeout > 0 {
+		time.AfterFunc(ctx.timeout, func() {
+			ctx.chDone <- ErrContextTimeout
+			if proc.ProcessState != nil && !proc.ProcessState.Exited() {
+				proc.Process.Kill()
+			}
+			close(ctx.chDone)
+		})
+	}
+	go func() {
+		ctx.chDone <- proc.Wait()
+		close(ctx.chDone)
+	}()
 	return
 }

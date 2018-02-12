@@ -9,10 +9,15 @@ type timeValidator struct {
 	layout string
 }
 
-func (v *timeValidator) Validate(val []byte) bool {
+func (v *timeValidator) Validate(val []byte) (isValid bool, msg string) {
 	str := string(val)
 	_, err := time.Parse(v.layout, str)
-	return err == nil
+	if err == nil {
+		isValid = true
+	} else {
+		msg = fmt.Sprintf("`%s` is invalid, expected date time value.")
+	}
+	return
 }
 
 type timeScanner struct {
@@ -37,11 +42,9 @@ func (s *timeScanner) Scan(val interface{}) error {
 }
 
 func NewTime(dst *time.Time, layout, name, msg string) RequiredValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be a valid time", name)
-	return &inputField{name, msg, invalidMsg, true, &timeValidator{layout}, &timeScanner{layout, dst}}
+	return &inputField{name, msg, true, &timeValidator{layout}, &timeScanner{layout, dst}}
 }
 
 func NewTimeOpt(dst *time.Time, layout, name, msg string) ValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be a valid time", name)
-	return &inputField{name, msg, invalidMsg, false, &timeValidator{layout}, &timeScanner{layout, dst}}
+	return &inputField{name, msg, false, &timeValidator{layout}, &timeScanner{layout, dst}}
 }

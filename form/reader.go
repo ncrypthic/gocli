@@ -1,5 +1,5 @@
 package form
 
-type FormReader interface {
+type Reader interface {
 	Read([]byte) (int, error)
 }

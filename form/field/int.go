@@ -7,10 +7,15 @@ import (
 
 type intValidator struct{}
 
-func (v *intValidator) Validate(val []byte) bool {
+func (v *intValidator) Validate(val []byte) (isValid bool, msg string) {
 	str := string(val)
 	_, err := strconv.ParseInt(str, 10, 64)
-	return err == nil
+	if err == nil {
+		isValid = true
+	} else {
+		msg = fmt.Sprintf("`%s` is invalid, expected integer value\n")
+	}
+	return
 }
 
 type intScanner struct {
@@ -46,11 +51,9 @@ func (s *intScanner) Scan(val interface{}) error {
 }
 
 func NewInt(dst *int64, name, msg string) RequiredValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be an int64", name)
-	return &inputField{name, msg, invalidMsg, true, &intValidator{}, &intScanner{dst}}
+	return &inputField{name, msg, true, &intValidator{}, &intScanner{dst}}
 }
 
 func NewIntOpt(dst *int64, name, msg string) ValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be an int64", name)
-	return &inputField{name, msg, invalidMsg, false, &intValidator{}, &intScanner{dst}}
+	return &inputField{name, msg, false, &intValidator{}, &intScanner{dst}}
 }

@@ -4,8 +4,8 @@ import "fmt"
 
 type stringValidator struct{}
 
-func (v *stringValidator) Validate(val []byte) bool {
-	return true
+func (v *stringValidator) Validate(val []byte) (isValid bool, msg string) {
+	return true, ""
 }
 
 type stringScanner struct {
@@ -25,11 +25,9 @@ func (s *stringScanner) Scan(val interface{}) error {
 }
 
 func NewString(dst *string, name, msg string) RequiredValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be a string\n", name)
-	return &inputField{name, msg, invalidMsg, true, &stringValidator{}, &stringScanner{dst}}
+	return &inputField{name, msg, true, &stringValidator{}, &stringScanner{dst}}
 }
 
 func NewStringOpt(dst *string, name, msg string) ValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be a string", name)
-	return &inputField{name, msg, invalidMsg, false, &stringValidator{}, &stringScanner{dst}}
+	return &inputField{name, msg, false, &stringValidator{}, &stringScanner{dst}}
 }

@@ -8,17 +8,17 @@ import (
 )
 
 type Form interface {
-	Prompt(FormWriter, FormReader, []field.Field) error
+	Prompt(Writer, Reader, []field.Field) error
 }
 
 type form struct{}
 
-func (f *form) promptField(w FormWriter, r FormReader, inputField field.Field) (result []byte, err error) {
+func (f *form) promptField(w Writer, r Reader, inputField field.Field) (result []byte, err error) {
 	msg := []byte(inputField.Message())
 	if _, err = w.Write(msg); err != nil {
 		return result, err
 	}
-	b := make([]byte, 128)
+	b := make([]byte, 1024*32*1000)
 	pool := make([][]byte, 0)
 	size := 0
 	l := 0
@@ -47,57 +47,63 @@ func (f *form) promptField(w FormWriter, r FormReader, inputField field.Field) (
 	}
 }
 
-func (f *form) Prompt(w FormWriter, r FormReader, fields []field.Field) error {
+//Prompt will start command line interaction for specified fields
+func (f *form) Prompt(w Writer, r Reader, fields []field.Field) error {
 	for _, inputField := range fields {
-		var value []byte
 		switch t := inputField.(type) {
 		case field.RequiredValidatedField:
-			for t.Empty(value) || !t.Validator().Validate(value) {
-				switch {
-				case value != nil && t.Empty(value):
-					w.Write([]byte(fmt.Sprintf("`%s` is required\n", inputField.Name())))
-				case value != nil && t.Validator().Validate(value):
-					w.Write([]byte(inputField.InvalidMessage()))
-				}
-				if res, err := f.promptField(w, r, inputField); err != nil {
+		RequiredValidatedPromptLoop:
+			for {
+				res, err := f.promptField(w, r, inputField)
+				if err != nil {
 					return err
-				} else {
-					value = res
+				}
+				valid, invalidMsg := t.Validator().Validate(res)
+				switch {
+				case t.Empty(res):
+					w.Write([]byte(fmt.Sprintf("`%s` is required\n", inputField.Name())))
+				case !valid:
+					w.Write([]byte(invalidMsg))
+				default:
+					break RequiredValidatedPromptLoop
 				}
 			}
 		case field.RequiredField:
-			for t.Empty(value) {
-				if value != nil {
-					w.Write([]byte(fmt.Sprintf("`%` is required", inputField.Name())))
-				}
-				if res, err := f.promptField(w, r, inputField); err != nil {
+		RequiredLoop:
+			for {
+				res, err := f.promptField(w, r, inputField)
+				if err != nil {
 					return err
+				}
+				if t.Empty(res) {
+					w.Write([]byte(fmt.Sprintf("`%s` is required\n", inputField.Name())))
 				} else {
-					value = res
+					break RequiredLoop
 				}
 			}
 		case field.ValidatedField:
-			for !t.Validator().Validate(value) {
-				if value != nil {
-					w.Write([]byte(inputField.InvalidMessage()))
-				}
-				if res, err := f.promptField(w, r, inputField); err != nil {
+		ValidatedLoop:
+			for {
+				res, err := f.promptField(w, r, inputField)
+				if err != nil {
 					return err
+				}
+				if valid, invalidMsg := t.Validator().Validate(res); !valid {
+					w.Write([]byte(invalidMsg))
 				} else {
-					value = res
+					break ValidatedLoop
 				}
 			}
 		default:
-			if res, err := f.promptField(w, r, inputField); err != nil {
+			if _, err := f.promptField(w, r, inputField); err != nil {
 				return err
-			} else {
-				value = res
 			}
 		}
 	}
 	return nil
 }
 
+//NewForm creates a new Form
 func NewForm() Form {
 	return &form{}
 }

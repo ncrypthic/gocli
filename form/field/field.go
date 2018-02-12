@@ -4,7 +4,7 @@ type Value interface{}
 
 //Validator is a function to validate user input which returns boolean
 type Validator interface {
-	Validate([]byte) bool
+	Validate([]byte) (bool, string)
 }
 
 type Scanner interface {
@@ -14,7 +14,6 @@ type Scanner interface {
 type Field interface {
 	Name() string
 	Message() string
-	InvalidMessage() string
 	Scanner() Scanner
 }
 
@@ -35,12 +34,11 @@ type RequiredValidatedField interface {
 }
 
 type inputField struct {
-	name           string
-	message        string
-	invalidMessage string
-	required       bool
-	validator      Validator
-	scanner        Scanner
+	name      string
+	message   string
+	required  bool
+	validator Validator
+	scanner   Scanner
 }
 
 func (f *inputField) Name() string {
@@ -49,10 +47,6 @@ func (f *inputField) Name() string {
 
 func (f *inputField) Message() string {
 	return f.message
-}
-
-func (f *inputField) InvalidMessage() string {
-	return f.invalidMessage
 }
 
 func (f *inputField) Empty(val []byte) bool {
@@ -67,6 +61,20 @@ func (f *inputField) Scanner() Scanner {
 	return f.scanner
 }
 
-func NewField(name, msg, invalidMsg string, required bool, validator Validator, scanner Scanner) Field {
-	return &inputField{name, msg, invalidMsg, required, validator, scanner}
+func NewField(name, msg string, required bool, validator Validator, scanner Scanner) Field {
+	return &inputField{name, msg, required, validator, scanner}
+}
+
+func WithValidator(f Field, validator Validator) Field {
+	_, required := f.(RequiredField)
+	return &inputField{f.Name(), f.Message(), required, validator, f.Scanner()}
+}
+
+func WithScanner(f Field, scanner Scanner) Field {
+	_, required := f.(RequiredField)
+	var validator Validator
+	if validatedField, hasValidator := f.(ValidatedField); hasValidator {
+		validator = validatedField.Validator()
+	}
+	return &inputField{f.Name(), f.Message(), required, validator, scanner}
 }

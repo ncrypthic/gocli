@@ -2,11 +2,11 @@ package form
 
 type Color int
 
-type FormWriter interface {
+type Writer interface {
 	Write([]byte) (int, error)
 }
 
-type ColorizeFormWriter interface {
-	FormWriter
+type ColorWriter interface {
+	Writer
 	WriteColor(Color, []byte)
 }

@@ -7,10 +7,15 @@ import (
 
 type floatValidator struct{}
 
-func (v *floatValidator) Validate(val []byte) bool {
+func (v *floatValidator) Validate(val []byte) (isValid bool, msg string) {
 	str := string(val)
 	_, err := strconv.ParseFloat(str, 64)
-	return err == nil
+	if err == nil {
+		isValid = true
+	} else {
+		msg = fmt.Sprintf("`%s` is invalid, expected float value\n")
+	}
+	return
 }
 
 type floatScanner struct {
@@ -52,11 +57,9 @@ func (s *floatScanner) Scan(val interface{}) error {
 }
 
 func NewFloat(dst *float64, name, msg string) RequiredValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be a float64", name)
-	return &inputField{name, msg, invalidMsg, true, &floatValidator{}, &floatScanner{dst}}
+	return &inputField{name, msg, true, &floatValidator{}, &floatScanner{dst}}
 }
 
 func NewFloatOpt(dst *float64, name, msg string) ValidatedField {
-	invalidMsg := fmt.Sprintf("Field `%s` value must be a float64", name)
-	return &inputField{name, msg, invalidMsg, false, &floatValidator{}, &floatScanner{dst}}
+	return &inputField{name, msg, false, &floatValidator{}, &floatScanner{dst}}
 }
